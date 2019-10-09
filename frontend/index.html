@@ -3,6 +3,17 @@
 <html lang='en'>
   <head>
     <title>Snake Canvas </title>
+    <script type="text/javascript" src="../backend/index.js"></script>
+    <STYLE>
+    #game {position: fixed;
+           top: 0;
+           left: 0;
+           bottom: 0;
+           right: 0;
+           overflow: auto;
+           z-index: -1;
+         }
+    </STYLE>
   </head>
   <body>
     <header>
@@ -14,7 +25,7 @@
         <div id='highscores'>
         </div>
         <div id='buttons'>
-          <button type='button' id='start'>Start Game</button>
+          <button type='button' id='start' onclick="">Start Game</button>
         </div>
       </div>
       <canvas id='game' width='500' height='500'>
