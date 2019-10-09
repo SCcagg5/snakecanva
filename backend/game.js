@@ -94,11 +94,13 @@ class Game {
     this.diff = speed;
     this.snakeworker.terminate();
     this.snakeworker = new Worker("../backend/timeworker.js");
-    this.snakeworker.onmessage = function(e) {game.snake.move()}
+    this.snakeworker.onmessage = function(e) {game.moveloop()}
     this.snakeworker.postMessage(this.diff + 0);
   }
 
-  checkcollide(a, b){
+  checkcollide(a, b, all){
+    if (all == false)
+      return (a.x == b.x && a.y == b.y);
     for (var i1 of a.part){
       for (var i2 of b.part) {
         if (i2[0] == i1[0] && i2[1] == i1[1]){
@@ -112,7 +114,7 @@ class Game {
   addfood(){
     var size = this.food.length;
     var food = new Food(Math.floor(Math.random() * Math.floor(this.wsize - 1)) + 1, Math.floor(Math.random() * Math.floor(this.hsize - 1)) + 1);
-    while (this.checkcollide(this.snake, food)){
+    while (this.checkcollide(this.snake, food, true)){
       for (var i in this.food){
           if (this.checkcollide(this.food[i], food))
               return addfood();
@@ -122,26 +124,33 @@ class Game {
     this.draw(this.food[size]);
   }
 
-  start(){
-    this.gamestat = 1;
-
-    for (var i = 0; i < 100; i++)
-      this.addfood();
-    this.snakeworker = new Worker("../backend/timeworker.js");
-    this.snakeworker.onmessage = function(e) {game.snake.move();}
-    this.snakeworker.postMessage(this.diff + 0);
-
-    this.drawworker = new Worker("../backend/timeworker.js");
-    this.drawworker.onmessage = function(e) {
+  moveloop(){
+    game.snake.move();
+    game.checkgameover();
     for (var i in game.food)
-        if (game.checkcollide(game.snake, game.food[i])){
+        if (game.checkcollide(game.snake, game.food[i], false)){
           game.food.splice(i,1);
           game.snake.size += 1;
           game.changespeed(game.diff - 50 > 100 ? game.diff - 50 : 100);
         }
-        game.draw(game.snake);
+  }
 
-        game.checkgameover();
+  start(){
+    this.gamestat = 1;
+
+    for (var i = 0; i < 10; i++)
+      this.addfood();
+    this.snakeworker = new Worker("../backend/timeworker.js");
+    this.snakeworker.onmessage = function(e) {game.moveloop()}
+    this.snakeworker.postMessage(this.diff + 0);
+
+    this.drawworker = new Worker("../backend/timeworker.js");
+    this.drawworker.onmessage = function(e) {
+    if (e % 300 == 0){
+      game.canva.clearRect(0,0, game.width, game.height);
+      game.basegame();
+    }
+    game.draw(game.snake);
     }
     this.drawworker.postMessage(1000 / 30);
   }
