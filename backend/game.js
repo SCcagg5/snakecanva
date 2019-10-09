@@ -53,12 +53,12 @@ class Game {
     this.canva.stroke();
   }
 
-  draw(obj){
+  draw(obj, all){
     this.canva.fillStyle = obj.color ;
     for (var i of obj.part) {
       this.canva.fillRect(i[0] * this.casesize ,i[1] * this.casesize,this.casesize - 1,this.casesize - 1);
+      if (!all){break;}
     }
-    this.wall();
   }
 
   drawAll(objs){
@@ -125,13 +125,13 @@ class Game {
   }
 
   moveloop(){
-    game.snake.move();
-    game.checkgameover();
-    for (var i in game.food)
-        if (game.checkcollide(game.snake, game.food[i], false)){
-          game.food.splice(i,1);
-          game.snake.size += 1;
-          game.changespeed(game.diff - 50 > 100 ? game.diff - 50 : 100);
+    this.snake.move();
+    this.checkgameover();
+    for (var i in this.food)
+        if (this.checkcollide(this.snake, this.food[i], false)){
+          this.food.splice(i,1);
+          this.snake.size += 1;
+          this.changespeed(this.diff - 50 > 100 ? this.diff - 50 : 100);
         }
   }
 
@@ -145,13 +145,7 @@ class Game {
     this.snakeworker.postMessage(this.diff + 0);
 
     this.drawworker = new Worker("../backend/timeworker.js");
-    this.drawworker.onmessage = function(e) {
-    if (e % 300 == 0){
-      game.canva.clearRect(0,0, game.width, game.height);
-      game.basegame();
-    }
-    game.draw(game.snake);
-    }
+    this.drawworker.onmessage = function(e) {game.draw(game.snake, false);}
     this.drawworker.postMessage(1000 / 30);
   }
 }
@@ -187,9 +181,6 @@ class Snake {
   }
 
   checksize(){
-    if (game.gamestat != 1){
-      return;
-    }
     if (this.size < this.part.length){
       var part = this.part.pop();
       game.canva.fillStyle = 'rgb(200, 200, 200)';
