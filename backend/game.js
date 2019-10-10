@@ -75,10 +75,11 @@ class Game {
   }
 
   checkgameover(){
-    if (this.snake.x == 0 || this.snake.x == this.wsize || this.snake.y == 0 || this.snake.y == this.hsize){
+    if (this.snake.x <= 0 || this.snake.x >= this.wsize || this.snake.y <= 0 || this.snake.y >= this.hsize){
       this.gamestat = 0;
       this.snakeworker.terminate();
       this.drawworker.terminate();
+      this.foodworker.terminate();
       return true;
     }
     return false;
@@ -113,7 +114,7 @@ class Game {
 
   addfood(){
     var size = this.food.length;
-    var food = new Food(Math.floor(Math.random() * Math.floor(this.wsize - 1)) + 1, Math.floor(Math.random() * Math.floor(this.hsize - 1)) + 1);
+    var food = new Food(this.hsize, this.wsize);
     while (this.checkcollide(this.snake, food, true)){
       for (var i in this.food){
           if (this.checkcollide(this.food[i], food))
@@ -138,8 +139,7 @@ class Game {
   start(){
     this.gamestat = 1;
 
-    for (var i = 0; i < 10; i++)
-      this.addfood();
+    this.addfood();
     this.snakeworker = new Worker("../backend/timeworker.js");
     this.snakeworker.onmessage = function(e) {game.moveloop()}
     this.snakeworker.postMessage(this.diff + 0);
@@ -147,51 +147,10 @@ class Game {
     this.drawworker = new Worker("../backend/timeworker.js");
     this.drawworker.onmessage = function(e) {game.draw(game.snake, false);}
     this.drawworker.postMessage(1000 / 30);
-  }
-}
 
-class Food {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.part = [[this.x, this.y]];
-      this.color = 'rgb(200, 0, 0)';
-  }
-}
-
-class Snake {
-  constructor(x, y, size) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.part = [[this.x, this.y]];
-    this.dir = "DOWN";
-    this.color = 'rgb(0, 0, 0)';
-
-  }
-
-  move(){
-    if (direction[this.dir][0] % 2 != 0){
-      this.x += direction[this.dir][1];
-    } else {
-      this.y += direction[this.dir][1];
-    }
-    this.part.unshift([this.x, this.y]);
-    this.checksize();
-  }
-
-  checksize(){
-    if (this.size < this.part.length){
-      var part = this.part.pop();
-      game.canva.fillStyle = 'rgb(200, 200, 200)';
-      game.canva.fillRect(part[0] * game.casesize - 1 , part[1] * game.casesize - 1, game.casesize + 1,game.casesize + 1);
-    }
-  }
-
-  changedir(dir){
-    if (direction[this.dir][0] != ((direction[dir][0] + 2) % 4)){
-      this.dir = dir;
-    }
+    this.foodworker = new Worker("../backend/timeworker.js");
+    this.foodworker.onmessage = function(e) {game.addfood();}
+    this.foodworker.postMessage(5000);
   }
 }
 
